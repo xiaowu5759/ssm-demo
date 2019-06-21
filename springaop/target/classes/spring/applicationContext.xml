@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--1 aop是基于代理完成的，所以我们需要激活自动代理-->
+    <aop:aspectj-autoproxy/>
+    <!--切入对象和切入方法-->
+    <!--2 注册一个切面,具体要使用的bean类-->
+    <bean class="com.xiaowu.advice.BeforeAdvice" id="beforeAdvice">
+
+    </bean>
+    <bean class="com.xiaowu.advice.AfterAdvice" id="afterAdvice">
+
+    </bean>
+    <bean class="com.xiaowu.advice.AfterReturnAdvice" id="afterReturnAdvice">
+
+    </bean>
+
+    <bean class="com.xiaowu.service.ProviderService" id="providerService">
+
+    </bean>
+    <bean class="com.xiaowu.service.HelloService" id="helloService"></bean>
+    <bean class="com.xiaowu.advice.ExceptionAdvice" id="exceptionAdvice">
+
+    </bean>
+    <bean class="com.xiaowu.advice.AroundAdvice" id="aroundAdvice"></bean>
+
+    <!--3 配置我们的切入点-->
+    <!--真正切面的配置-->
+    <aop:config>
+        <aop:aspect id="beforeAspect" ref="beforeAdvice">
+            <!--aop:before 表明它确实是一个前置通知
+            method 指明它使用哪种具体方法来切
+            pointcut:切入点
+            你要什么包下面的什么方法-->
+
+            <!--如果有多个同类型的建议，谁在前 谁先执行-->
+            <aop:before method="methodBefore" pointcut="execution(* com.xiaowu.service.*.*(..))"></aop:before>
+            <aop:before method="before" pointcut="execution(* com.xiaowu.service.*.*(..))"></aop:before>
+        </aop:aspect>
+    </aop:config>
+
+    <aop:config>
+        <aop:aspect id="afterAspect" ref="afterAdvice">
+            <!--service.* *表示任意类 任意方法 (..)表示方法任意参数-->
+            <!--execution(* com.xiaowu.service.*.*()) 如果这样 切的就是无参方法-->
+            <!--execution(* com.xiaowu.service.*.*(java.lang.String)) 切参数为一个String类型-->
+            <!--* com.xiaowu.service.*.*(java.lang.String, int) 切两个参数，一个string 一个int-->
+            <!--实验证明，包装类和int基本数据类型 对于execution是严格区分的-->
+            <aop:after method="after" pointcut="execution(* com.xiaowu.service.*.*(..))"></aop:after>
+        </aop:aspect>
+    </aop:config>
+
+    <aop:config>
+        <aop:aspect id="afterReturnAdvice" ref="afterReturnAdvice">
+            <!--可以获取返回值-->
+            <!--
+                returning 可以和返回值绑定
+            -->
+            <aop:after-returning method="afterReturn" pointcut="execution(* com.xiaowu.service.*.*(..))" returning="returning"></aop:after-returning>
+
+        </aop:aspect>
+    </aop:config>
+
+    <aop:config>
+        <aop:aspect ref="exceptionAdvice">
+            <!--com.. com后面的任意包，无论多少层-->
+            <aop:after-throwing method="exception" pointcut="execution(* com.xiaowu.service.*.*(..))"></aop:after-throwing>
+        </aop:aspect>
+    </aop:config>
+
+    <aop:config>
+        <aop:aspect ref="aroundAdvice">
+            <aop:around method="around" pointcut="execution(* com.xiaowu.service.*.*(..))"></aop:around>
+        </aop:aspect>
+    </aop:config>
+
+</beans>

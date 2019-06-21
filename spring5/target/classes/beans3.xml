@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--新建一个独立环境-->
+
+    <!--也是别名的意思-->
+    <alias name="dog" alias="gdog"/>
+
+    <bean class="com.xiaowu.pojo.Girl" id="hisGirl"  name="girl g g2" depends-on="dog">
+        <!--非字面值可描述的属性注入，比如通过ref来描述，引用-->
+        <property name="dog" ref="dog"/>
+    </bean>
+
+    <bean class="com.xiaowu.pojo.Dog" id="dog">
+        <property name="name" value="xiaotian"/>
+    </bean>
+
+    <!--有构造函数的时候-->
+    <bean class="com.xiaowu.pojo.Dog" id="dog2">
+        <constructor-arg name="name" value="wangcai"/>
+    </bean>
+
+    <!--
+        构造方式：
+        通过name进行注入
+    -->
+    <bean class="com.xiaowu.pojo.Car" id="car">
+        <constructor-arg name="name" value="宝马"/>
+        <constructor-arg name="price" value="23333"/>
+        <constructor-arg name="speed" value="88"/>
+    </bean>
+
+    <bean class="com.xiaowu.pojo.Car" id="car2">
+        <constructor-arg type="java.lang.String" value="2222"/>
+        <constructor-arg type="java.lang.Double" value="22222"/>
+    </bean>
+
+
+</beans>

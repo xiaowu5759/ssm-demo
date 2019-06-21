@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org//dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xiaowu5759.mapper.UserMapper">
+
+    <!--
+    mybatis 对于处理简单的单表查询一般使用result就可以解决
+    对于多表联合查询 往往都需要使用resultMap进行详细的描述
+    告诉mybatis
+    怎么封装，规矩由我们定
+    -->
+    <select id="queryById" resultMap="UserWithDetialMap2">
+        SELECT t1.u_id, t1.phone, t1.password, t1.create_time, t1.statue,
+        t2.ud_id, t2.u_id, t2.address, t2.cid
+        FROM `user` t1, user_detial t2
+        <where>
+            t1.u_id = t2.u_id
+            and t1.u_id = #{id};
+        </where>
+    </select>
+
+    <!--封装方式 一-->
+    <!--官方推荐方式-->
+    <resultMap id="UserWithDetialMap" type="UserWithDetial">
+        <!--其中property是type中的属性，colum是数据表中的值-->
+        <!--property是javabean中的属性，type就是列-->
+        <!--user基本信息-->
+        <!--查询顺序和封装顺序不一样会查不到？-->
+        <!--和封装顺序无关-->
+        <id property="uId" column="u_id"></id>
+        <result property="phone" column="phone"></result>
+
+        <result property="createDate" column="create_Time"></result>
+        <result property="statue" column="statue"></result>
+        <result property="passward" column="password"></result>
+
+        <!--持有UserDetial这个，如何封装-->
+        <!--association 对于一对一，怎么将值传入UserDetial-->
+        <!--
+        property是java里面的属性
+        由于它不像前面的result简单属性
+        所以需要额外指明他的java的数据类型
+        -->
+        <association property="userDetial" javaType="UserDetial">
+            <id property="udId" column="ud_id"/>
+            <!--<result property="user" column="u_id"/> 这里如何解决-->
+            <!--<result property="user" column="u_id"/> 会报错-->
+            <!--如下可以-->
+            <result property="user.uId" column="u_id"/>
+            <result property="address" column="address"/>
+            <result property="cId" column="cid"/>
+        </association>
+
+    </resultMap>
+
+    <!--封装方式 二-->
+    <!--采用点 直接应用的方法, 连缀点法-->
+    <resultMap id="UserWithDetialMap2" type="UserWithDetial">
+        <id property="uId" column="u_id"></id>
+        <result property="phone" column="phone"></result>
+
+        <result property="createDate" column="create_Time"></result>
+        <result property="statue" column="statue"></result>
+        <result property="passward" column="password"></result>
+        <result property="userDetial.udId" column="ud_id"/>
+        <result property="userDetial.address" column="address"/>
+        <result property="userDetial.cId" column="cid"/>
+    </resultMap>
+
+    <!--最好的推荐，逻辑性强，代码复用率高-->
+    <!--查询方式 三-->
+    <!--mybatis支持分步查询
+    如果查询太复杂，支持分步查询-->
+    <select id="queryByStep" resultMap="UserWithDetialMap3">
+        SELECT t1.u_id, t1.phone, t1.password, t1.create_time, t1.statue
+        FROM `user` t1
+        <where>
+            and t1.u_id = #{id};
+        </where>
+    </select>
+
+    <!--resultMap 是可以被继承的-->
+    <resultMap id="userBaseMap" type="UserWithDetial">
+        <!--user基本信息-->
+        <id property="uId" column="u_id"/>
+        <result property="phone" column="phone"/>
+        <result property="createDate" column="create_Time"/>
+        <result property="statue" column="statue"/>
+        <result property="passward" column="password"/>
+    </resultMap>
+
+    <resultMap id="UserWithDetialMap3" extends="userBaseMap" type="UserWithDetial">
+        <!--column="u_id" 其实就是一种传参-->
+        <association property="userDetial" select="com.xiaowu5759.mapper.UserDetialMapper.queryByUserId" column="u_id">
+
+        </association>
+    </resultMap>
+
+    <!--SQL语句查询中，采用别名-->
+    <select id="queryByIdWithBlog" resultMap="userWithBlog">
+        SELECT t1.u_id, t1.phone, t1.statue, t1.`password`, t1.create_time,
+        t2.blog_id, t2.content, t2.summary, t2.title,
+        t3.comment_id, t3.content comment_content
+        FROM `user` t1, blog t2, `comment` t3
+        <where>
+            t1.u_id = t2.u_id
+            AND t2.blog_id = t3.blog_id
+            AND t1.u_id = #{uId}
+        </where>
+    </select>
+    
+    <resultMap id="userWithBlog" extends="userBaseMap" type="com.xiaowu5759.pojo.UserBlog">
+        <!--封装博客-->
+        <!--这是一种一对多的关系-->
+        <!--ofType 是描述集合当中的元素的数据类型-->
+        <collection property="blogs" ofType="com.xiaowu5759.pojo.Blog">
+            <id property="blogId" column="blog_id"/>
+            <result property="title" column="title"/>
+            <result property="summary" column="summary"/>
+            <result property="content" column="content"/>
+            <!--博客里面还有评论，一对多封装-->
+            <collection property="comments" ofType="com.xiaowu5759.pojo.Comment">
+                <id property="commentId" column="comment_id"/>
+                <result property="content" column="comment_content"/>
+            </collection>
+        </collection>
+        
+    </resultMap>
+
+
+</mapper>
